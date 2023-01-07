@@ -9,6 +9,7 @@ January 2023
 import sys
 import os
 import re
+import hashlib
 
 # check argument to open dfc.conf 
 def check_args():
@@ -218,6 +219,62 @@ def server_conf():
 		server_list.append((s_names_dict['server' +str(ct)],\
 							int(s_ports_dict['server' + str(ct)])))
 	return server_list
+
+# split a file given a chunk size 
+def split_files(filename, chunksize):
+
+	# create chunks 
+	with open(filename + '.txt', 'rb') as bytefile:
+		content = bytearray(os.path.getsize(filename + '.txt'))
+		bytefile.readinto(content)
+		
+		for count, i in enumerate(range(0, len(content), chunksize)):
+			with open(filename + '_' + str(count+1) + '.txt.', 'wb') as fh:
+				fh.write(content[i: i + chunksize])
+
+				
+# determine server location for chunk pairs
+def chunk_pairs(filename):
+		
+	# group chunks in paired lists							# per table:
+	pair1 = [filename +'_1.txt', filename +'_2.txt']    	# 1,2
+	pair2 = [filename +'_2.txt', filename +'_3.txt'] 		# 2,3
+	pair3 = [filename +'_3.txt', filename +'_4.txt']		# 3,4 
+	pair4 = [filename +'_4.txt', filename +'_1.txt']		# 4,1
+
+	# md5 hash value of file 
+
+	hash=hashlib.md5()
+	with open(filename +'.txt', 'rb') as fh:
+		buffer = fh.read()
+		hash.update(buffer)
+		
+		# modulus determines server pairs
+		storeval = int(hash.hexdigest(), 16) % 4
+
+	# server pairs depending on modulus
+	if storeval == 0:
+		dfs1 = pair1
+		dfs2 = pair2
+		dfs3 = pair3
+		dfs4 = pair4
+	elif storeval == 1:
+		dfs1 = pair4
+		dfs2 = pair1
+		dfs3 = pair2
+		dfs4 = pair3
+	elif storeval == 2:
+		dfs1 = pair3
+		dfs2 = pair4
+		dfs3 = pair1
+		dfs4 = pair2
+	else:
+		dfs1 = pair2
+		dfs2 = pair3
+		dfs3 = pair4
+		dfs4 = pair1
+	
+	return dfs1, dfs2, dfs3, dfs4 
 
 # run client
 if __name__=='__main__':
