@@ -10,6 +10,8 @@ import sys
 import os
 import re
 import hashlib
+import time
+import socket
 
 # check argument to open dfc.conf 
 def check_args():
@@ -316,6 +318,102 @@ def get_command():
 			else:
 				print('There is no such command. You have no more attempts.\nExiting now....')
 				sys.exit()
+
+# define client socket connection
+def client():
+	
+	# authenticate with client ----------------------------
+	authenticate()
+	username = final_authorization[0]
+	password = final_authorization[1]
+	
+	# connect to servers ----------------------------------
+	
+	# config params for servers 
+	server_conf()
+
+	# DFS1 
+	try:
+		client_socket1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		client_socket1.connect(server_list[0])
+		status1 = ('Connected to server', 'DFS1')
+		print(status1[0], status1[1])
+		time.sleep(1)
+	except ConnectionRefusedError:
+		status1 = ('Could not connect to server', 'DFS1')
+		print(status1[0], status1[1])
+		
+	# DFS2
+	try:
+		client_socket2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		client_socket2.connect(server_list[1])
+		status2 = ('Connected to server', 'DFS2')
+		print(status2[0], status2[1])
+		time.sleep(1)
+	except ConnectionRefusedError:
+		status2 = ('Could not connect to server', 'DFS2')
+		print(status2[0], status2[1])
+		
+	# DFS3
+	try:
+		client_socket3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		client_socket3.connect(server_list[2])
+		status3 = ('Connected to server', 'DFS3')
+		print(status3[0], status3[1])
+		time.sleep(1)
+	except ConnectionRefusedError:
+		status3 = ('Could not connect to server', 'DFS3')
+		print(status3[0], status3[1])
+		
+	# DFS4
+	try:
+		client_socket4 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		client_socket4.connect(server_list[3])
+		status4 = ('Connected to server', 'DFS4')
+		print(status4[0], status4[1])
+		time.sleep(1)
+	except ConnectionRefusedError:
+		status4 = ('Could not connect to server', 'DFS4')
+		print(status4[0], status4[1])	
+
+
+	# if all servers are down, exit client 
+	if status1[0] == 'Could not connect to server' and status2[0] == 'Could not connect to server' \
+		and status3[0] == 'Could not connect to server' and status4[0] == 'Could not connect to server':
+		print('All servers are down.\nExiting now...')
+		sys.exit()
+	else:
+		pass
+		
+	# looping lists: connections, and server names
+	conns = (client_socket1, client_socket2, client_socket3, client_socket4)
+	DFSS = ('DFS1', 'DFS2', 'DFS3', 'DFS4')	
+
+	
+	# authenticate with servers ---------------------------
+	
+	# send usernames 
+	for i in range(0,4):
+		try:
+			conns[i].send(username.encode())
+			time.sleep(1)
+		except OSError:
+			pass 
+	
+	# send passwords
+	for i in range(0,4):
+		try:
+			conns[i].send(password.encode())
+		except OSError:
+			pass 		
+				
+	# server authorization response
+	for i in range(0,4):
+		try:
+			response = conns[i].recv(1024)
+			print('From ' +DFSS[i] +': ' +response.decode())
+		except OSError:
+			pass
 
 # run client
 if __name__=='__main__':
