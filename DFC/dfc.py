@@ -276,6 +276,47 @@ def chunk_pairs(filename):
 	
 	return dfs1, dfs2, dfs3, dfs4 
 
+# get command from user
+def get_command():
+
+	global command
+	command = ''
+	for i in range(0, 4):
+		if command != '':
+			return command
+			break
+		else:
+			comm = input('Please specify a command [get, list, put]: ')
+			if i < 2:
+				if comm.lower() == 'get':
+					command = 'get'
+					continue
+				elif comm.lower() == 'list':
+					command = 'list'
+					continue
+				elif comm.lower() == 'put':
+					command = 'put'
+					continue
+				else:
+					print('There is no such command. You have ' +str(3-i) + ' attempts left.')
+					continue
+			elif i == 2:
+				if comm.lower() == 'get':
+					command = 'get'
+					continue
+				elif comm.lower() == 'list':
+					command = 'list'
+					continue
+				elif comm.lower() == 'put':
+					command = 'put'
+					continue
+				else:
+					print('There is no such command. You have ' +str(3-i) + ' attempt left.')
+					continue
+			else:
+				print('There is no such command. You have no more attempts.\nExiting now....')
+				sys.exit()
+
 # run client
 if __name__=='__main__':
 	check_args()
