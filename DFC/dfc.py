@@ -180,6 +180,45 @@ def authenticate():
 	final_authorization = (username, password)
 	return final_authorization
 
+# config params for server
+def server_conf():	
+
+	# open config file 
+	fh = open('dfc.conf', mode='r', encoding='cp1252')
+	params = re.findall(r'DFS.*', fh.read())
+
+	# get server names 
+	s_names = list()
+	for i in range(0, len(params)):
+		s_names.append(str(params[i]).split()[1].split(":")[0])
+	
+	# get server ports 
+	s_ports = list()
+	for i in range(0, len(params)):
+		s_ports.append(str(params[i]).split()[1].split(":")[1])
+
+	# dict with server names
+	s_names_dict = {}
+	for i in range(0, len(params)):
+		entry={'server' +str(i+1):s_names[i]}
+		s_names_dict.update(entry)
+		
+	# dict with server ports
+	s_ports_dict = {}
+	for i in range(0, len(params)):
+		entry={'server' +str(i+1):s_ports[i]}
+		s_ports_dict.update(entry)
+	
+	# lists of (sever name, server port) lists
+	global server_list
+	server_list = list()
+	ct = 0
+	for i in range(0, len(params)):
+		ct += 1
+		server_list.append((s_names_dict['server' +str(ct)],\
+							int(s_ports_dict['server' + str(ct)])))
+	return server_list
+
 # run client
 if __name__=='__main__':
 	check_args()
