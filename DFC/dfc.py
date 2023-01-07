@@ -1094,7 +1094,11 @@ def client():
 				print(FIN)
 				sys.exit()			
 
+def main():
+    check_args()
+    client()
+
 # run client
 if __name__=='__main__':
-	check_args()
+	main()
 	

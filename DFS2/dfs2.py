@@ -385,3 +385,75 @@ def get(username):
 		print(FINACK +'\nExiting now...')
 		
 	sys.exit()
+
+# RUN DFS -------------------------------------------------	
+server_name = '127.0.0.1'
+server_port = int(sys.argv[1])
+	
+# define socket
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind((server_name, server_port))
+server_socket.listen(5)
+print('Server listening...')
+
+while True:
+	conn, client_address = server_socket.accept()
+	print('Connected to Client.')
+	
+	# get username  
+	username = conn.recv(2048)
+	username = username.decode()
+	print('received username')
+	
+	# get password 
+	password = conn.recv(2048)
+	password = password.decode()
+	print('received password')
+	
+	# authorize client
+	auth_params()	
+	client_auth(auth_dict, username, password)
+				
+	# create a new directory for user, if none exists 
+	new_dir(username)
+	
+	# receive command from user
+	command = conn.recv(1024).decode()
+	print('The user requested to ' +command + ' files.')
+		
+	# PUT 
+	if command == 'put':
+		put(new_dir_path)
+						
+	# LIST
+	elif command == 'list':
+		list_files(username)
+		
+		# after listing, get further action
+		answer = conn.recv(1024).decode()
+		print('The user now requests to ' +answer +' files.')
+
+		# PUT within LIST
+		if answer == 'put':
+			print('Receiving files...')
+			put(new_dir_path)
+
+		# GET within LIST 
+		elif answer == 'get':
+			get(username)
+			
+		# exit 
+		else:
+			print('Exiting now...')
+			sys.exit()	
+			
+	# GET
+	elif command == 'get':
+		get(username)
+					
+	# handle wrong command  
+	else:
+		print('Command does not exist.\nExiting now...')
+		sys.exit()	
+
+conn.close()
