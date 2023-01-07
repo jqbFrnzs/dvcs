@@ -113,6 +113,66 @@ def authenticate():
 				else:
 					print('Username does not exist. You have no more attempts.\nExiting now....')
 					sys.exit()
+                    
+    # authenticate password 
+	# get the index of the user in the auth_dict to check password in that index
+	user_index = sum(username_auth)
+
+	# re-initialize auth status
+	auth_status = ''
+	for i in range(0, 4):
+		if auth_status == 'Valid password.':
+			# pass authentication 
+			pass
+			
+		else:
+			# get password
+			password = input('password: ')
+			# hash 
+			hash=hashlib.md5()
+			hash.update(password.encode())
+			password = hash.hexdigest()
+			
+			# initialize password auth 			
+			password_auth = []
+			ct = 0
+			for key, value in auth_dict.items():
+				ct += 1
+				if password == value:
+					password_auth.append(ct)
+				else:
+					password_auth.append(0)
+			
+			if i < 2:
+				if sum(password_auth) > 0:
+					# check that index of password matches user index
+					if user_index == sum(password_auth):
+						auth_status = 'Valid password.'
+						continue
+					else:
+						print('Wrong password. You have ' +str(3-i) + ' attempts left.')
+						continue
+				else:
+					print('Wrong password. You have ' +str(3-i) + ' attempts left.')
+					continue
+			elif i == 2:
+				if sum(password_auth) > 0:
+					if user_index == sum(password_auth):
+						auth_status = 'Valid password.'
+						continue
+					else:
+						print('Wrong password. You have ' +str(3-i) + ' attempt left.')
+						continue 				
+				else:
+					print('Wrong password. You have ' +str(3-i) + ' attempt left.')
+					continue 
+			else:
+				if user_index == sum(password_auth):
+					auth_status = 'Valid password.'
+					continue
+				else:
+					print('Wrong password. You have no more attempts.\nExiting now....')
+					sys.exit()
 
 # run client
 if __name__=='__main__':
