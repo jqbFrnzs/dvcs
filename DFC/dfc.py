@@ -113,7 +113,7 @@ def authenticate():
 				else:
 					print('Username does not exist. You have no more attempts.\nExiting now....')
 					sys.exit()
-                    
+
     # authenticate password 
 	# get the index of the user in the auth_dict to check password in that index
 	user_index = sum(username_auth)
@@ -173,6 +173,12 @@ def authenticate():
 				else:
 					print('Wrong password. You have no more attempts.\nExiting now....')
 					sys.exit()
+
+    # Final auth after passing all checks
+	print('Authorization Granted.')					
+	global final_authorization
+	final_authorization = (username, password)
+	return final_authorization
 
 # run client
 if __name__=='__main__':
