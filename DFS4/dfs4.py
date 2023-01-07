@@ -61,3 +61,59 @@ def auth_params():
 		auth_dict.update(entry)
 
 	return auth_dict
+
+# authorize client, given username and password
+def client_auth(auth_dict, username, password):
+	ct = 0
+	auth_status=''
+	for key, value in auth_dict.items():
+		ct += 1
+		if auth_status != '':
+			pass
+		else:
+			# check all users up to last
+			if ct < len(auth_dict):
+			
+				if username == key:
+					print('Correct username.')
+					
+					if password == value:
+						print('Correct password.')
+						
+						auth_status='Authorization Granted.\n'
+						print(auth_status)
+						conn.send(auth_status.encode())
+						pass
+					else:
+						print('Incorrect password.')
+						auth_status = 'Authorization Denied.\n'
+						print(auth_status)
+						conn.send(auth_status.encode())
+						sys.exit()
+				else:
+					continue
+			
+			# check last user
+			else:
+				if username == key:
+					print('Correct username.')
+							
+					if password == value:
+						print('Correct password.')
+						
+						auth_status='Authorization Granted.\n'
+						print(auth_status)
+						conn.send(auth_status.encode())
+						pass
+					else:
+						print('Incorrect password.')
+						auth_status = 'Authorization Denied.\n'
+						print(auth_status)
+						conn.send(auth_status.encode())
+						sys.exit()
+				else:
+					print('Incorrect username.')
+					auth_status = 'Authorization Denied.\n'
+					print(auth_status)
+					conn.send(auth_status.encode())
+					sys.exit()
