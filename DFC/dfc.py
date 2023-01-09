@@ -6,24 +6,44 @@ Client
 J. Francuz & D. Gaszewski
 January 2023
 """
-import sys
+# DFC
+
+# modules
+import re 
 import os
-import re
-import hashlib
+import sys
+import glob
 import time
 import socket
+import hashlib
+
+
+
+
+# initialize version control system
+def vcs_init():
+    if os.path.isdir('.gites'):
+        print('Version control system already initialized and running!')
+		
+    else:
+		os.mkdir(".git/")
+		os.mkdir(".git/objects/")
+		os.mkdir(".git/refs/")
+		with open(".git/HEAD","w") as f:
+			f.write("ref: refs/heads/master\n")
+			print("created")
 
 # check argument to open dfc.conf 
 def check_args():
 
 	# error handling no argument 
 	if len(sys.argv) != 2:
-		print("ERROR: Must supply an argument \nUSAGE: python dfc.py dfc.conf")
+		print("ERROR: Must supply an argument \nUSAGE: py dfc.py dfc.conf")
 		sys.exit()
 
 	# error handling argument passed 
 	elif sys.argv[1].lower() != 'dfc.conf':
-		print("ERROR: Must supply a valid argument \nUSAGE: python dfc.py dfc.conf")
+		print("ERROR: Must supply a valid argument \nUSAGE: py dfc.py dfc.conf")
 		sys.exit()
 		
 	# error if there is no dfc.conf file
@@ -34,6 +54,7 @@ def check_args():
 	# if no error, return dfc.conf 
 	else:
 		return sys.argv[1]
+
 
 # params for user auth from dfc.conf
 def user_auth():
@@ -116,8 +137,8 @@ def authenticate():
 				else:
 					print('Username does not exist. You have no more attempts.\nExiting now....')
 					sys.exit()
-
-    # authenticate password 
+	
+	# authenticate password 
 	# get the index of the user in the auth_dict to check password in that index
 	user_index = sum(username_auth)
 
@@ -176,13 +197,14 @@ def authenticate():
 				else:
 					print('Wrong password. You have no more attempts.\nExiting now....')
 					sys.exit()
-
-    # Final auth after passing all checks
+					
+	# Final auth after passing all checks
 	print('Authorization Granted.')					
 	global final_authorization
 	final_authorization = (username, password)
 	return final_authorization
 
+	
 # config params for server
 def server_conf():	
 
@@ -222,6 +244,7 @@ def server_conf():
 							int(s_ports_dict['server' + str(ct)])))
 	return server_list
 
+	
 # split a file given a chunk size 
 def split_files(filename, chunksize):
 
@@ -251,7 +274,7 @@ def chunk_pairs(filename):
 		buffer = fh.read()
 		hash.update(buffer)
 		
-		# modulus determines server pairs
+		# molulus determines server pairs
 		storeval = int(hash.hexdigest(), 16) % 4
 
 	# server pairs depending on modulus
@@ -277,6 +300,7 @@ def chunk_pairs(filename):
 		dfs4 = pair1
 	
 	return dfs1, dfs2, dfs3, dfs4 
+	
 
 # get command from user
 def get_command():
@@ -288,7 +312,7 @@ def get_command():
 			return command
 			break
 		else:
-			comm = input('Please specify a command [get, list, put]: ')
+			comm = input('Please specify a command [get, list, put, vcs]: ')
 			if i < 2:
 				if comm.lower() == 'get':
 					command = 'get'
@@ -298,6 +322,9 @@ def get_command():
 					continue
 				elif comm.lower() == 'put':
 					command = 'put'
+					continue
+				elif comm.lower() == 'vcs':
+					command = 'vcs'
 					continue
 				else:
 					print('There is no such command. You have ' +str(3-i) + ' attempts left.')
@@ -312,6 +339,9 @@ def get_command():
 				elif comm.lower() == 'put':
 					command = 'put'
 					continue
+				elif comm.lower() == 'vcs':
+					command = 'vcs'
+					continue
 				else:
 					print('There is no such command. You have ' +str(3-i) + ' attempt left.')
 					continue
@@ -319,6 +349,49 @@ def get_command():
 				print('There is no such command. You have no more attempts.\nExiting now....')
 				sys.exit()
 
+# get a file name from user				
+def get_filename():
+	for i in range(0, 2):
+		if i == 0:
+			txtfiles = []
+			print('Current files: ')
+			print('-' * 15)
+			for file in glob.glob("*.txt"):
+				txtfiles.append(file)
+				print(file.split(".")[0])
+			print('\n')
+			filename = input('Please specify a file: ')
+			
+			# check if file exists
+			try:
+				statinfo = os.stat(filename + '.txt')
+				break
+			except FileNotFoundError:
+				print('There is no such file in the directory.\nPlease try again.\n')
+				continue 
+		else:
+			txtfiles = []
+			print('Current files: ')
+			print('-' * 15)
+			for file in glob.glob("*.txt"):
+				txtfiles.append(file)
+				print(file.split(".")[0])
+			print('\n')
+			filename = input('Please specify a file: ')
+			
+			# check if file exists
+			try:
+				statinfo = os.stat(filename + '.txt')
+			except FileNotFoundError:
+				print('There is no such file in the directory.\nExiting now...')
+				sys.exit()
+	
+	global filename_statinfo
+	filename_statinfo = (filename, statinfo)
+	return filename_statinfo
+
+
+	
 # define client socket connection
 def client():
 	
@@ -414,8 +487,8 @@ def client():
 			print('From ' +DFSS[i] +': ' +response.decode())
 		except OSError:
 			pass
-    
-    # get command from user -------------------------------
+
+	# get command from user -------------------------------
 	get_command()
 			
 	# PUT
@@ -505,6 +578,9 @@ def client():
 		
 		print('\nExiting now...')
 		sys.exit()
+	# INIT
+	elif command.lower() == 'init':
+		vcs_init()
 			
 	# LIST
 	elif command.lower() == 'list':
@@ -624,7 +700,7 @@ def client():
 			print('\nExiting now...')
 			sys.exit()
 
-			
+
 		# GET (within LIST)			
 		elif answer.lower() == 'get':
 			# already informed servers! 
@@ -1093,12 +1169,9 @@ def client():
 						
 				print(FIN)
 				sys.exit()			
-
-def main():
-    check_args()
-    client()
-
+							
+			
 # run client
 if __name__=='__main__':
-	main()
-	
+	check_args()
+	client()

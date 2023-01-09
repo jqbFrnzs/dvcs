@@ -1,15 +1,18 @@
+
+
 """
 gites - Distributed Version Control System
 
-Server 4
+Server 4 
 
 J. Francuz & D. Gaszewski
 January 2023
 """
 
-import sys
-import re
+# modules
 import os
+import re 
+import sys
 import time
 import socket
 
@@ -18,7 +21,7 @@ def check_args():
 
 	# error handling argument
 	if len(sys.argv) != 2:
-		print("ERROR: Must supply port number \nUSAGE: py dfs1.py 10004")
+		print("ERROR: Must supply port number \nUSAGE: py dfs3.py 10004")
 		sys.exit()
 
 	# error handling port number 
@@ -34,6 +37,8 @@ def check_args():
 				print("ERROR: Port number must be a number.")
 				sys.exit()
 
+check_args()
+		
 # get authentication parameters
 def auth_params():
 
@@ -120,7 +125,7 @@ def client_auth(auth_dict, username, password):
 					print(auth_status)
 					conn.send(auth_status.encode())
 					sys.exit()
-
+				
 # put files into servers
 def put(new_dir_path):
 	
@@ -387,7 +392,9 @@ def get(username):
 		
 	sys.exit()
 
+	
 # RUN DFS -------------------------------------------------	
+
 server_name = '127.0.0.1'
 server_port = int(sys.argv[1])
 	

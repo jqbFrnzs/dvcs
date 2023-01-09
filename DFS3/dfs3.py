@@ -11,6 +11,7 @@ import sys
 import re
 import os
 import time
+import socket
 
 # function to check port number assignment
 def check_args():
