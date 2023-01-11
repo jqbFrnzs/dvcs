@@ -16,22 +16,7 @@ import glob
 import time
 import socket
 import hashlib
-
-
-
-
-# initialize version control system
-def vcs_init():
-    if os.path.isdir('.gites'):
-        print('Version control system already initialized and running!')
-		
-    else:
-		os.mkdir(".git/")
-		os.mkdir(".git/objects/")
-		os.mkdir(".git/refs/")
-		with open(".git/HEAD","w") as f:
-			f.write("ref: refs/heads/master\n")
-			print("created")
+import zlib
 
 # check argument to open dfc.conf 
 def check_args():
@@ -39,23 +24,87 @@ def check_args():
 	# error handling no argument 
 	if len(sys.argv) != 2:
 		print("ERROR: Must supply an argument \nUSAGE: py dfc.py dfc.conf")
-		sys.exit()
+		# sys.exit()
 
 	# error handling argument passed 
 	elif sys.argv[1].lower() != 'dfc.conf':
 		print("ERROR: Must supply a valid argument \nUSAGE: py dfc.py dfc.conf")
-		sys.exit()
+		# sys.exit()
 		
 	# error if there is no dfc.conf file
 	elif os.path.isfile(sys.argv[1]) != True:
 		print("ERROR: dfc.conf not found.")
-		sys.exit()	
+		# sys.exit()	
 	
 	# if no error, return dfc.conf 
 	else:
 		return sys.argv[1]
 
+# initialize version control system
+def vcs_init():
+	if os.path.isdir('.gites'):
+		print('Version control system already initialized and running!')
+	else:
+		os.mkdir(".gites")
+		os.mkdir(".gites/files")
+		# os.mkdir(".gites/refs")
+		# with open(".gites/HEAD", "w") as f:
+		# 	f.write("ref: refs/heads/master\n")
 
+def get_vcs_command():
+	global vcs_command
+	vcs_command = ''
+	for i in range(0, 4):
+		if vcs_command != '':
+			return vcs_command
+			break
+		else:
+			comm = input('Please specify a command [init, cat]: ')
+			if i < 2:
+				if comm.lower() == 'init':
+					vcs_command = 'init'
+					continue
+				elif comm.lower() == 'cat':
+					vcs_command = 'cat'
+					continue
+				else:
+					print('There is no such command. You have ' +str(3-i) + ' attempts left.')
+					continue
+			elif i == 2:
+				if comm.lower() == 'init':
+					vcs_command = 'init'
+					continue
+				elif comm.lower() == 'cat':
+					vcs_command = 'cat'
+					continue
+
+				else:
+					print('There is no such command. You have ' +str(3-i) + ' attempt left.')
+					continue
+			else:
+				print('There is no such command. You have no more attempts.\nExiting now....')
+				# sys.exit()
+		
+
+# 
+def vsc_cat_file():
+	files = os.listdir(os.curdir)
+	sha1_of_blob = ''
+	sub_dir = sha1_of_blob[0:2]
+	blob_name = sha1_of_blob[2:]
+	blob_path = ".gites/objects/" + sub_dir +"/"+ blob_name
+	decompressed_content = ""
+	with open(blob_path, "rb") as f:
+		decomp_w_header = zlib.decompress(f.read())
+		content_str_w_header = decomp_w_header.decode("utf-8")
+		decomp = content_str_w_header.split('\x00')[1]
+	print(decomp, end="")
+
+
+
+def get_file_modification_date(file):
+	return os.path.getmtime(file)
+				  
 # params for user auth from dfc.conf
 def user_auth():
 	
@@ -136,7 +185,7 @@ def authenticate():
 					continue
 				else:
 					print('Username does not exist. You have no more attempts.\nExiting now....')
-					sys.exit()
+					# sys.exit()
 	
 	# authenticate password 
 	# get the index of the user in the auth_dict to check password in that index
@@ -196,7 +245,7 @@ def authenticate():
 					continue
 				else:
 					print('Wrong password. You have no more attempts.\nExiting now....')
-					sys.exit()
+					# sys.exit()
 					
 	# Final auth after passing all checks
 	print('Authorization Granted.')					
@@ -347,7 +396,8 @@ def get_command():
 					continue
 			else:
 				print('There is no such command. You have no more attempts.\nExiting now....')
-				sys.exit()
+				# sys.exit()
+	 
 
 # get a file name from user				
 def get_filename():
@@ -384,7 +434,7 @@ def get_filename():
 				statinfo = os.stat(filename + '.txt')
 			except FileNotFoundError:
 				print('There is no such file in the directory.\nExiting now...')
-				sys.exit()
+				# sys.exit()
 	
 	global filename_statinfo
 	filename_statinfo = (filename, statinfo)
@@ -437,7 +487,7 @@ def client():
 	except ConnectionRefusedError:
 		status3 = ('Could not connect to server', 'DFS3')
 		print(status3[0], status3[1])
-		
+		0
 	# DFS4
 	try:
 		client_socket4 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -454,7 +504,7 @@ def client():
 	if status1[0] == 'Could not connect to server' and status2[0] == 'Could not connect to server' \
 		and status3[0] == 'Could not connect to server' and status4[0] == 'Could not connect to server':
 		print('All servers are down.\nExiting now...')
-		sys.exit()
+		# sys.exit()
 	else:
 		pass
 		
@@ -490,7 +540,7 @@ def client():
 
 	# get command from user -------------------------------
 	get_command()
-			
+	
 	# PUT
 	if command.lower() == 'put':
 		for i in range(0,4):
@@ -577,10 +627,17 @@ def client():
 		os.remove(str(dfs3[1]))
 		
 		print('\nExiting now...')
-		sys.exit()
+		# sys.exit()
 	# INIT
-	elif command.lower() == 'init':
-		vcs_init()
+	elif command.lower() == 'vcs':
+		'Please specify a command [init, cat]: '
+		get_vcs_command()
+  	
+		if vcs_command == 'init':
+			vcs_init()
+		elif vcs_command == 'cat':
+			vsc_cat_file()
+		
 			
 	# LIST
 	elif command.lower() == 'list':
@@ -698,7 +755,7 @@ def client():
 			os.remove(str(dfs3[1]))
 			
 			print('\nExiting now...')
-			sys.exit()
+			# sys.exit()
 
 
 		# GET (within LIST)			
@@ -745,7 +802,7 @@ def client():
 				else:
 					try:
 						print(answer)
-						sys.exit()
+						# sys.exit()
 					except OSError:
 						pass			
 								
@@ -852,7 +909,7 @@ def client():
 							pass
 						
 					print('Exiting now...')
-					sys.exit()
+					# sys.exit()
 					
 				else:
 
@@ -864,7 +921,7 @@ def client():
 							pass
 							
 					print(FIN)
-					sys.exit()
+					# sys.exit()
 				
 			# else if there are 4 chunks	
 			else:
@@ -912,7 +969,7 @@ def client():
 							pass
 						
 					print('Exiting now...')
-					sys.exit()
+					# sys.exit()
 					
 				else:
 					# if the ordered list is not [1,2,3,4]
@@ -924,18 +981,18 @@ def client():
 							pass
 							
 					print(FIN)
-					sys.exit()
+					# sys.exit()
 					
 		# end of GET (within LIST) --------------------------------
 			
 		elif answer.lower() == 'exit':
 			print('Exiting now...')
-			sys.exit()
+			# sys.exit()
 			
 		# allow user to try again possibly...
 		else:
 			print('This method does not exist.\nExiting now...')
-			sys.exit()		
+			# sys.exit()		
 			
 	# GET ----------------------------------------
 	else:
@@ -989,7 +1046,7 @@ def client():
 			else:
 				try:
 					print(answer)
-					sys.exit()
+					# sys.exit()
 				except OSError:
 					pass			
 							
@@ -1096,7 +1153,7 @@ def client():
 						pass
 					
 				print('Exiting now...')
-				sys.exit()
+				# sys.exit()
 				
 			else:
 
@@ -1108,7 +1165,7 @@ def client():
 						pass
 							
 				print(FIN)
-				sys.exit()
+				# sys.exit()
 			
 		# else if there are 4 chunks	
 		else:
@@ -1168,7 +1225,7 @@ def client():
 						pass
 						
 				print(FIN)
-				sys.exit()			
+				# sys.exit()			
 							
 			
 # run client
