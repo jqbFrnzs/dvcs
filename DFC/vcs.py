@@ -6,7 +6,7 @@ VERSION_DIR = '.gites/files/'
 WORKING_DIR = 'stage/'
 
 def create_txt_file():
-    filename = input("Enter a file name to create: ")
+    filename = input("Enter a file name to create:\n")
 
     with open(WORKING_DIR+filename, 'w') as f:
         while True:
