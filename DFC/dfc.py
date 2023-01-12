@@ -853,6 +853,7 @@ def client():
                     
             # check that all chunks arrived
             arrived = chunk_list
+            print(chunk_list)
             num_chunks = len(arrived)
             
             # if not all 4 arrived 
@@ -957,11 +958,13 @@ def client():
                 # create a list for numbers
                 arrived_ordered = []
                 for i in range(0,4):
-                    arrived_ordered.append(int(arrived[i].split('_')[1].split('.')[0]))
+                    chunk_end = arrived[i].split('_')[-1]
+                    chunk_num = int(chunk_end[-1])
+                    arrived_ordered.append(chunk_num)
                 
                 # should be [1,2,3,4]
                 arrived_ordered.sort()
-            
+                print(arrived_ordered)
                 # if it is, as expected
                 if arrived_ordered == [1,2,3,4]:
                 
@@ -977,7 +980,7 @@ def client():
                             
                     # concatenate chunks into file
                     chunk_list.sort()
-                    final_filename = chunk_list[0].split('_')[0] +'.txt'	
+                    final_filename = chunk_list[0].split('_')[0] + chunk_list[0].split('_')[1]
                     
                     with open(username +'\\' +final_filename, 'wb') as outfile:		
                         for chunk_name in chunk_list:
@@ -986,6 +989,15 @@ def client():
                     
                     print('File successfully reconstructed.')
                     
+                    #clearing file
+                    with open(username +'\\' +final_filename, 'r') as r, open(username +'\\' +final_filename+'_temp', 'w') as o:
+                        for line in r:
+                            #strip() function
+                            if line.strip():
+                                o.write(line)
+                    os.remove(username +'\\' +final_filename) 
+                    os.rename(username +'\\' +final_filename+'_temp', username +'\\' +final_filename)
+
                     # delete temporary files
                     for i in range(0,4):
                         try:
@@ -1020,7 +1032,7 @@ def client():
             sys.exit()		
             
     # GET ----------------------------------------
-    elif answer.lower() == 'get':
+    elif command.lower() == 'get':
         # inform servers 
         for i in range(0,4):		
             try:
