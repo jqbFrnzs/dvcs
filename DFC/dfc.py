@@ -308,7 +308,7 @@ def get_command():
             return command
             break
         else:
-            comm = input('Please specify a command [init, get, list, put, add, create, list_stage_local, list_vcs_local, list_remote]: ')
+            comm = input('Please specify a command [init, get, list, put, add, create, list_stage_local, list_vcs_local, list_remote]:\n')
             if i < 2:
                 if comm.lower() == 'get':
                     command = 'get'
@@ -622,7 +622,7 @@ def client():
             if len(dir_file_list) == 0:
                 print('No files in stage directory')
             else:
-                print('Files stored locally in working directory:')
+                print('\nFiles stored locally in working directory:\n')
                 vcs.print_all_staged_files_dir()
 
     # LIST_VCS_LOCAL
@@ -632,7 +632,7 @@ def client():
             if len(dir_file_list) == 0:
                 print('No files currently versioned - empty vcs directory')
             else:
-                print('Files stored locally in vcs directory:')
+                print('\nFiles stored locally in vcs directory:\n')
                 vcs.print_all_versioned_files_dir()
     # LIST_REMOTE
     elif command.lower() == 'list_remote':
