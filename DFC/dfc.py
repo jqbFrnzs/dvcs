@@ -195,7 +195,7 @@ def authenticate():
                     sys.exit()
                     
     # Final auth after passing all checks
-    print('Authorization Granted.')					
+    print('\n*** Authorization granted ***')					
     global final_authorization
     final_authorization = (username, password)
     return final_authorization
@@ -243,30 +243,42 @@ def server_conf():
     
 # split a file given a chunk size 
 def split_files(filename, chunksize):
+    
+    filepath = filename
 
     # create chunks 
-    with open(filename + '.txt', 'rb') as bytefile:
-        content = bytearray(os.path.getsize(filename + '.txt'))
+    # with open(filename + '.txt', 'rb') as bytefile:
+    with open(filepath, 'rb') as bytefile:
+        # content = bytearray(os.path.getsize(filename + '.txt'))
+        content = bytearray(os.path.getsize(filepath))
         bytefile.readinto(content)
         
         for count, i in enumerate(range(0, len(content), chunksize)):
-            with open(filename + '_' + str(count+1) + '.txt.', 'wb') as fh:
+            # with open(filename + '_' + str(count+1) + '.txt.', 'wb') as fh:
+            with open(filepath + '_chunk' + str(count+1), 'wb') as fh:
                 fh.write(content[i: i + chunksize])
 
                 
 # determine server location for chunk pairs
 def chunk_pairs(filename):
-        
+    
     # group chunks in paired lists							# per table:
-    pair1 = [filename +'_1.txt', filename +'_2.txt']    	# 1,2
-    pair2 = [filename +'_2.txt', filename +'_3.txt'] 		# 2,3
-    pair3 = [filename +'_3.txt', filename +'_4.txt']		# 3,4 
-    pair4 = [filename +'_4.txt', filename +'_1.txt']		# 4,1
+    # pair1 = [filename +'_1.txt', filename +'_2.txt']    	# 1,2
+    # pair2 = [filename +'_2.txt', filename +'_3.txt'] 		# 2,3
+    # pair3 = [filename +'_3.txt', filename +'_4.txt']		# 3,4 
+    # pair4 = [filename +'_4.txt', filename +'_1.txt']		# 4,1
 
+    pair1 = [filename +'_chunk1', filename +'_chunk2']    	# 1,2
+    pair2 = [filename +'_chunk2', filename +'_chunk3'] 		# 2,3
+    pair3 = [filename +'_chunk3', filename +'_chunk4']		# 3,4 
+    pair4 = [filename +'_chunk4', filename +'_chunk1']
+    
+    
     # md5 hash value of file 
 
     hash=hashlib.md5()
-    with open(filename +'.txt', 'rb') as fh:
+    # with open(filename +'.txt', 'rb') as fh:
+    with open(filename, 'rb') as fh:
         buffer = fh.read()
         hash.update(buffer)
         
@@ -373,37 +385,51 @@ def get_command():
 
 # get a file name from user				
 def get_filename():
+    filepath = vcs.VERSION_DIR
     for i in range(0, 2):
         if i == 0:
-            txtfiles = []
+            # txtfiles = []
             print('Current files: ')
             print('-' * 15)
-            for file in glob.glob("*.txt"):
-                txtfiles.append(file)
-                print(file.split(".")[0])
-            print('\n')
+            vcs.print_all_versioned_files_dir()
+            # files = vcs.get_vcs_dir_file_list()
+            # for file in glob.glob("*.txt"):
+            #     txtfiles.append(file)
+            #     print(file.split(".")[0])
+            # print('\n')
+                # for file in files:
+                #     txtfiles.append(file)
+                #     print(file.split(".")[0])
+                # print('\n')
             filename = input('Please specify a file: ')
+            filename = filepath + filename
             
             # check if file exists
             try:
-                statinfo = os.stat(filename + '.txt')
+                statinfo = os.stat(filename)
                 break
             except FileNotFoundError:
                 print('There is no such file in the directory.\nPlease try again.\n')
                 continue 
         else:
-            txtfiles = []
+            # txtfiles = []
             print('Current files: ')
             print('-' * 15)
-            for file in glob.glob("*.txt"):
-                txtfiles.append(file)
-                print(file.split(".")[0])
-            print('\n')
+            # for file in glob.glob("*.txt"):
+            #     txtfiles.append(file)
+            #     print(file.split(".")[0])
+            # print('\n')
+            # filename = input('Please specify a file: ')
+                # for file in files:
+                #     txtfiles.append(file)
+                #     print(file.split(".")[0])
+                # print('\n')
             filename = input('Please specify a file: ')
-            
+            filename = filepath + filename
             # check if file exists
             try:
-                statinfo = os.stat(filename + '.txt')
+                # statinfo = os.stat(filename + '.txt')
+                statinfo = os.stat(filename)
             except FileNotFoundError:
                 print('There is no such file in the directory.\nExiting now...')
                 sys.exit()
@@ -432,6 +458,7 @@ def client():
         client_socket1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket1.connect(server_list[0])
         status1 = ('Connected to server', 'DFS1')
+        print('')
         print(status1[0], status1[1])
         time.sleep(1)
     except ConnectionRefusedError:
@@ -443,6 +470,7 @@ def client():
         client_socket2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket2.connect(server_list[1])
         status2 = ('Connected to server', 'DFS2')
+        print('')
         print(status2[0], status2[1])
         time.sleep(1)
     except ConnectionRefusedError:
@@ -454,6 +482,7 @@ def client():
         client_socket3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket3.connect(server_list[2])
         status3 = ('Connected to server', 'DFS3')
+        print('')
         print(status3[0], status3[1])
         time.sleep(1)
     except ConnectionRefusedError:
@@ -465,6 +494,7 @@ def client():
         client_socket4 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket4.connect(server_list[3])
         status4 = ('Connected to server', 'DFS4')
+        print('')
         print(status4[0], status4[1])
         time.sleep(1)
     except ConnectionRefusedError:
