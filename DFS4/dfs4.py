@@ -139,11 +139,13 @@ def put(new_dir_path):
 		
 	# receive chunk 1 name and data 
 	name1 = conn.recv(1024).decode()
+	name1 = name1.split('/')[-1]
 	chunk1 = conn.recv(buffersize).decode()
 	print('Receiving ' +name1 +'...\n')
 	
 	# create file folder for chunks
-	file_folder = name1.split('_')[0]
+	path_to_split = name1.split('/')[-1]
+	file_folder = path_to_split.split('_')[0]+'_'+path_to_split.split('_')[1]
 	new_folder_path = os.getcwd() +'\\' +username +'\\' +file_folder
 	
 	if os.path.isdir(new_folder_path) == False:
@@ -174,6 +176,7 @@ def put(new_dir_path):
 	
 	# receive chunk 2 name and data 
 	name2 = conn.recv(1024).decode()
+	name2 = name2.split('/')[-1]
 	chunk2 = conn.recv(buffersize).decode()
 	print('Receiving ' +name2 +'...\n')	
 
@@ -338,10 +341,14 @@ def get(username):
 	
 	# send first batch of chunks
 	# get numbers of chunks 
-	chunk1_num = name1.split('_')[1]
-	chunk2_num = name2.split('_')[1]
+	chunk1_end = name1.split('_')[-1]
+	chunk1_num = chunk1_end[-1]
+	print(chunk1_num)
+	chunk2_end = name2.split('_')[-1]
+	chunk2_num = chunk2_end[-1]
+	print(chunk2_num)
 	
-	if chunk1_num == '1.txt' and chunk2_num == '4.txt':
+	if chunk1_num == '1' and chunk2_num == '4':
 		# send chunk 2 instead
 		conn.send(name2.encode())
 		time.sleep(0.5)
@@ -364,7 +371,7 @@ def get(username):
 	if FINACK == 'Transfer incomplete':
 		
 		# second batch, reverse rules 
-		if chunk1_num == '1.txt' and chunk2_num == '4.txt':
+		if chunk1_num == '1' and chunk2_num == '4':
 			# send chunk 1 instead
 			conn.send(name1.encode())
 			time.sleep(0.5)
@@ -434,7 +441,7 @@ while True:
 		put(new_dir_path)
 						
 	# LIST
-	elif command == 'list':
+	elif command == 'list_remote':
 		list_files(username)
 		
 		# after listing, get further action
