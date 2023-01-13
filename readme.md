@@ -82,13 +82,13 @@ hash mod **DFS1 DFS2 DFS3 DFS4**
 | 2  | (3,4) | (4,1) | (1,2) | (2,3) |
 | 3  | (2,3) | (3,4) | (4,1) | (1,2) |
 
-Metoda `[get]`:
+- Operacja `[get]`:
 
 >>pobiera pliki z serwerów do folderu użytkownika `(username/)` w folderze głównym DFC klienta.
 
->`get` łączy 4 kawałki w jeden plik. Jeśli jeden serwer jest uszkodzony, operacja ta może się udać. Jeśli operacja się nie powiedzie, plik nie zostanie utworzony, a użytkownik otrzyma komunikat 'Transfer failed'.
+>>`get` łączy 4 kawałki w jeden plik. Jeśli jeden serwer jest uszkodzony, operacja ta może się udać. Jeśli operacja się nie powiedzie, plik nie zostanie utworzony, a użytkownik otrzyma komunikat 'Transfer failed'.
 
-- Metoda `[list]`:
+- Operacja `[list]`:
 >>`list` dostarcza listę wszystkich części (chunks) plików, które użytkownik zapisał na serwerze. Z listy użytkownik może wyłuskać nazwy plików i określić plik do operacji GET. Jeśli użytkownik wybierze PUT w ramach LIST, może określić plik do wysłania do rozproszonego przechowywania.
 
 
