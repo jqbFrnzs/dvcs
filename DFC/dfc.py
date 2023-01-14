@@ -320,7 +320,7 @@ def get_command():
             return command
             break
         else:
-            comm = input('Please specify a command [init, get, list, put, add, create, list_stage_local, list_vcs_local, list_remote]:\n')
+            comm = input('Please specify a command [init, get, put, add, create, list_stage_local, list_vcs_local, list_remote]:\n')
             if i < 2:
                 if comm.lower() == 'get':
                     command = 'get'
@@ -372,13 +372,13 @@ def get_command():
                 elif comm.lower() == 'add':
                     command = 'add'
                     continue
+                elif comm.lower() == 'exit':
+                    command = 'exit'
+                    continue
                 else:
                     print('There is no such command. You have ' +str(3-i) + ' attempts left.')
                     continue
             else:
-                print('There is no such command. You have no more attempts.\nExiting now....')
-                sys.exit()
-     
                 print('There is no such command. You have no more attempts.\nExiting now....')
                 sys.exit()
      
@@ -541,166 +541,19 @@ def client():
             pass
 
     # get command from user -------------------------------
-    get_command()
+    while True:
+        get_command()
 		
-    # PUT
-    if command.lower() == 'put':
-        for i in range(0,4):
-            try:
-                conns[i].send(command.encode())
-            except OSError:
-                pass
-
-        # get a file name from user
-        get_filename()
-        filename = filename_statinfo[0]
-        statinfo = filename_statinfo[1]
-                    
-        # determine size of file and chunks
-        filesize = statinfo.st_size	
-        buffersize = round(float(filesize)/4) +4
-            
-        # split files into 4 chunks	
-        split_files(filename, buffersize)
-                
-        # determine chunk pairs and server locations 
-        dfs1, dfs2, dfs3, dfs4 = chunk_pairs(filename)
-        
-        # list to loop through
-        dfss = (dfs1, dfs2, dfs3, dfs4)	
-        
-        # send chunk pairs to servers
-        
-        # buffer size
-        for i in range(0,4):
-            try:
-                conns[i].send(str(buffersize).encode())
-            except OSError:
-                pass 
-        
-        # chunk1 name and data
-        for i in range(0,4):
-            try:
-                conns[i].send(dfss[i][0].encode())
-                time.sleep(0.5)
-                chunk1=open(dfss[i][0], 'rb').read()
-                conns[i].send(chunk1)
-                print('\nSending ' +str(dfss[i][0]) +'...\n')
-            except OSError:
-                pass
-        
-        # get chunk1 response
-        for i in range(0,4):
-            try:
-                response=conns[i].recv(1024).decode()
-                if response == 'Chunk 1 successfully transferred.\n':
-                    print(DFSS[i] +' Chunk 1 transfer complete.')
-                else:
-                    print(DFSS[i] +' Chunk 1 transfer failed.')
-            except OSError:
-                pass
-            
-        # chunk2 name and data 
-        for i in range(0,4):
-            try:
-                conns[i].send(dfss[i][1].encode())
-                time.sleep(0.5)				
-                chunk2=open(dfss[i][1], 'rb').read()
-                conns[i].send(chunk2)
-                print('\nSending ' +str(dfss[i][1]) +'...\n')
-            except OSError:
-                pass
-            
-        # get chunk2 response
-        for i in range(0,4):
-            try:
-                response=conns[i].recv(1024).decode()
-                if response == 'Chunk 2 successfully transferred.\n':
-                    print(DFSS[i] +' Chunk 2 transfer complete.')
-                else:
-                    print(DFSS[i] +' Chunk 2 transfer incomplete.')
-            except OSError:
-                pass
-            
-        # delete chunks from client directory
-        os.remove(str(dfs1[0]))
-        os.remove(str(dfs1[1]))
-        os.remove(str(dfs3[0]))
-        os.remove(str(dfs3[1]))
-        
-        print('\nExiting now...')
-        sys.exit()
-
-    # INIT
-    elif command.lower() == 'init':
-        vcs.vcs_init()
-    
-    elif command.lower() == 'add':
-        vcs.save_specified_files_with_next_version()
-
-    # CREATE
-    elif command.lower() == 'create':
-        # 'Please specify a command [init, cat]: '
-        # get_vcs_command()
-        if vcs.is_vcs_initialized():
-            vcs.create_txt_file()
-    
-    # LIST_STAGE_LOCAL
-    elif command.lower() == 'list_stage_local':
-        if vcs.is_vcs_initialized():
-            dir_file_list = vcs.get_working_dir_file_list()
-            if len(dir_file_list) == 0:
-                print('No files in stage directory')
-            else:
-                print('\nFiles stored locally in working directory:\n')
-                vcs.print_all_staged_files_dir()
-
-    # LIST_VCS_LOCAL
-    elif command.lower() == 'list_vcs_local':
-        if vcs.is_vcs_initialized():
-            dir_file_list = vcs.get_vcs_dir_file_list()
-            if len(dir_file_list) == 0:
-                print('No files currently versioned - empty vcs directory')
-            else:
-                print('\nFiles stored locally in vcs directory:\n')
-                vcs.print_all_versioned_files_dir()
-    # LIST_REMOTE
-    elif command.lower() == 'list_remote':
-            
-        # inform servers
-        for i in range(0,4):
-            try:
-                conns[i].send(command.encode())
-            except OSError:
-                pass
-            
-        # get list of files, print to console
-        for i in range(0,4):		
-            try:
-                file_names=conns[i].recv(4096).decode()
-                # print a table for each server 
-                print('\nCurrent ' +DFSS[i] +'\%s files:' %username)
-                print('-' * 27)
-                print(file_names)
-            except OSError:
-                pass
-        
-        # print to console whether a file is reconstructable?
-        
-        
-        # ask if user wants to put a file
-        print('\nWould you like to get files, put files, or exit?')
-        answer = input('[get, put, exit]: ')
-        
-        # inform servers
-        for i in range(0,4):
-            try:
-                conns[i].send(answer.encode())
-            except OSError:
-                pass
-        
-        # PUT (within LIST)
-        if answer.lower() == 'put':
+        # EXIT
+        if command.lower() == 'exit':
+                break
+        # PUT
+        if command.lower() == 'put':
+            for i in range(0,4):
+                try:
+                    conns[i].send(command.encode())
+                except OSError:
+                    pass
 
             # get a file name from user
             get_filename()
@@ -755,7 +608,7 @@ def client():
             for i in range(0,4):
                 try:
                     conns[i].send(dfss[i][1].encode())
-                    time.sleep(0.5)					
+                    time.sleep(0.5)				
                     chunk2=open(dfss[i][1], 'rb').read()
                     conns[i].send(chunk2)
                     print('\nSending ' +str(dfss[i][1]) +'...\n')
@@ -780,12 +633,417 @@ def client():
             os.remove(str(dfs3[1]))
             
             print('\nExiting now...')
-            sys.exit()
+            break
+
+        # INIT
+        elif command.lower() == 'init':
+            vcs.vcs_init()
+        
+        elif command.lower() == 'add':
+            vcs.save_specified_files_with_next_version()
+
+        # CREATE
+        elif command.lower() == 'create':
+            # 'Please specify a command [init, cat]: '
+            # get_vcs_command()
+            if vcs.is_vcs_initialized():
+                vcs.create_txt_file()
+        
+        # LIST_STAGE_LOCAL
+        elif command.lower() == 'list_stage_local':
+            if vcs.is_vcs_initialized():
+                dir_file_list = vcs.get_working_dir_file_list()
+                if len(dir_file_list) == 0:
+                    print('No files in stage directory')
+                else:
+                    print('\nFiles stored locally in working directory:\n')
+                    vcs.print_all_staged_files_dir()
+
+        # LIST_VCS_LOCAL
+        elif command.lower() == 'list_vcs_local':
+            if vcs.is_vcs_initialized():
+                dir_file_list = vcs.get_vcs_dir_file_list()
+                if len(dir_file_list) == 0:
+                    print('No files currently versioned - empty vcs directory')
+                else:
+                    print('\nFiles stored locally in vcs directory:\n')
+                    vcs.print_all_versioned_files_dir()
+        # LIST_REMOTE
+        elif command.lower() == 'list_remote':
+                
+            # inform servers
+            for i in range(0,4):
+                try:
+                    conns[i].send(command.encode())
+                except OSError:
+                    pass
+                
+            # get list of files, print to console
+            for i in range(0,4):		
+                try:
+                    file_names=conns[i].recv(4096).decode()
+                    # print a table for each server 
+                    print('\nCurrent ' +DFSS[i] +'\%s files:' %username)
+                    print('-' * 27)
+                    print(file_names)
+                except OSError:
+                    pass
+            
+            # print to console whether a file is reconstructable?
+            
+            
+            # ask if user wants to put a file
+            print('\nWould you like to get files, put files, or exit?')
+            answer = input('[get, put, exit]: ')
+            
+            # inform servers
+            for i in range(0,4):
+                try:
+                    conns[i].send(answer.encode())
+                except OSError:
+                    pass
+            
+            # PUT (within LIST)
+            if answer.lower() == 'put':
+
+                # get a file name from user
+                get_filename()
+                filename = filename_statinfo[0]
+                statinfo = filename_statinfo[1]
+                            
+                # determine size of file and chunks
+                filesize = statinfo.st_size	
+                buffersize = round(float(filesize)/4) +4
+                    
+                # split files into 4 chunks	
+                split_files(filename, buffersize)
+                        
+                # determine chunk pairs and server locations 
+                dfs1, dfs2, dfs3, dfs4 = chunk_pairs(filename)
+                
+                # list to loop through
+                dfss = (dfs1, dfs2, dfs3, dfs4)	
+                
+                # send chunk pairs to servers
+                
+                # buffer size
+                for i in range(0,4):
+                    try:
+                        conns[i].send(str(buffersize).encode())
+                    except OSError:
+                        pass 
+                
+                # chunk1 name and data
+                for i in range(0,4):
+                    try:
+                        conns[i].send(dfss[i][0].encode())
+                        time.sleep(0.5)
+                        chunk1=open(dfss[i][0], 'rb').read()
+                        conns[i].send(chunk1)
+                        print('\nSending ' +str(dfss[i][0]) +'...\n')
+                    except OSError:
+                        pass
+                
+                # get chunk1 response
+                for i in range(0,4):
+                    try:
+                        response=conns[i].recv(1024).decode()
+                        if response == 'Chunk 1 successfully transferred.\n':
+                            print(DFSS[i] +' Chunk 1 transfer complete.')
+                        else:
+                            print(DFSS[i] +' Chunk 1 transfer failed.')
+                    except OSError:
+                        pass
+                    
+                # chunk2 name and data 
+                for i in range(0,4):
+                    try:
+                        conns[i].send(dfss[i][1].encode())
+                        time.sleep(0.5)					
+                        chunk2=open(dfss[i][1], 'rb').read()
+                        conns[i].send(chunk2)
+                        print('\nSending ' +str(dfss[i][1]) +'...\n')
+                    except OSError:
+                        pass
+                    
+                # get chunk2 response
+                for i in range(0,4):
+                    try:
+                        response=conns[i].recv(1024).decode()
+                        if response == 'Chunk 2 successfully transferred.\n':
+                            print(DFSS[i] +' Chunk 2 transfer complete.')
+                        else:
+                            print(DFSS[i] +' Chunk 2 transfer incomplete.')
+                    except OSError:
+                        pass
+                    
+                # delete chunks from client directory
+                os.remove(str(dfs1[0]))
+                os.remove(str(dfs1[1]))
+                os.remove(str(dfs3[0]))
+                os.remove(str(dfs3[1]))
+                
+                print('\nExiting now...')
+                sys.exit()
 
 
-        # GET (within LIST)			
-        elif answer.lower() == 'get':
-            # already informed servers! 
+            # GET (within LIST)			
+            elif answer.lower() == 'get':
+                # already informed servers! 
+                
+                # create a subdirectory for user in client
+                new_dir_path = os.getcwd() +'\\' +username
+
+                if os.path.isdir(new_dir_path) == False:
+                    try:  
+                        os.mkdir(new_dir_path)
+                        print ("Successfully created the directory %s " % new_dir_path)	
+                        pass
+                    except OSError:
+                        print ("Creation of the directory %s failed" % new_dir_path)
+                else:
+                    pass
+                
+                # get filename from user
+                filename = input('Please specify a file: ')
+                
+                # send file name to server
+                for i in range(0,4):
+                    try:
+                        conns[i].send(filename.encode())
+                    except OSError:
+                        pass
+                
+                # receive server answer 
+                for i in range(0,4):
+                    try:
+                        answer=conns[i].recv(1024).decode()
+                    except OSError:
+                        pass
+                
+                # get buffersize if answer is positive
+                for i in range(0,4):
+                    if answer == 'Server is preparing file transfer...':
+                        try:
+                            buffersize=int(conns[i].recv(1024).decode())
+                        except OSError:
+                            pass
+                    else:
+                        try:
+                            print(answer)
+                            sys.exit()
+                        except OSError:
+                            pass			
+                                    
+                # get names of first batch of chunks 
+                chunk_list = []
+                for i in range(0,4):
+                    try:
+                        name=conns[i].recv(1024).decode()
+                        chunk_list.append(name)
+                    except OSError:
+                        pass
+                
+                # get first batch of chunks
+                # if not all servers are connected limit range to len(chunk_list)
+                for i in range(0,len(chunk_list)):
+                    try:
+                        chunk1=conns[i].recv(buffersize).decode()
+                        with open(os.path.join(new_dir_path, chunk_list[i]), 'w') as fh:
+                            fh.write(chunk1)
+                        print('File chunks successfully transferred.')
+                    except OSError:
+                        pass			
+                        
+                # check that all chunks arrived
+                arrived = chunk_list
+                print(chunk_list)
+                num_chunks = len(arrived)
+                
+                # if not all 4 arrived 
+                if num_chunks < 4:
+
+                    # send NACK
+                    NACK = 'Transfer incomplete'
+                    print(NACK +'\nOnly ' +str(num_chunks) +' out of 4 chunks arrived.')
+                    for i in range(0,4):
+                        try:
+                            conns[i].send(NACK.encode())
+                        except OSError:
+                            pass 			
+
+                    # get names of second batch
+                    chunk2_list = []
+                    for i in range(0,4):
+                        try:
+                            name2=conns[i].recv(1024).decode()
+                            chunk2_list.append(name2)
+                        except OSError:
+                            pass
+                        
+                    # get second batch
+                    print('Receiving second batch...')
+                    for i in range(0,len(chunk2_list)):
+                        try:
+                            chunk2=conns[i].recv(buffersize).decode()
+                            with open(os.path.join(new_dir_path, chunk2_list[i]), 'w') as fh:
+                                fh.write(chunk2)
+                            print('File chunks successfully transferred.')
+                        except OSError:
+                            pass
+                    
+                    # check if the chunks are the correct ones now
+                    # list all files (list already ordered)
+                    arrived2 = os.listdir(new_dir_path)
+
+                    # subset the 4 chunks of interst (filename)
+                    arrived2_clean = []
+                    for i in range(0, len(arrived2)):
+                        if arrived2[i].split('_')[0] == filename:
+                            arrived2_clean.append(arrived2[i])
+                        else:
+                            pass 
+                        
+                    # create integer list
+                    arrived2_intlist = []
+                    for i in range(0,len(arrived2_clean)):
+                        arrived2_intlist.append(int(arrived2_clean[i].split('_')[1].split('.')[0]))
+
+                    # compare with [1,2,3,4], if a match
+                    if arrived2_intlist == [1,2,3,4]:
+                        print('Chunks 1 through 4 are present.')
+                        
+                        # send FIN
+                        FIN = 'Transfer successful.'
+                        for i in range(0,4):
+                            try:
+                                conns[i].send(FIN.encode())
+                            except OSError:
+                                pass 
+                                
+                        # concatenate chunks into file
+                        final_filename = arrived2_clean[0].split('_')[0] +'.txt'	
+                        
+                        with open(username +'\\' +final_filename, 'wb') as outfile:		
+                            for chunk_name in arrived2_clean:
+                                with open(username +'\\' +chunk_name, 'rb') as infile:
+                                    outfile.write(infile.read())
+                        
+                        print('File successfully reconstructed.')
+                        
+                        # delete temporary files
+                        for i in range(0,len(arrived2_clean)):
+                            try:
+                                os.remove(str(username +'\\' +arrived2_clean[i]))
+                            except IndexError:
+                                pass
+                            
+                        print('Exiting now...')
+                        sys.exit()
+                        
+                    else:
+
+                        FIN = 'Transfer failed.\nExiting now...'
+                        for i in range(0,4):
+                            try:
+                                conns[i].send(FIN.encode())
+                            except OSError:
+                                pass
+                                
+                        print(FIN)
+                        sys.exit()
+                    
+                # else if there are 4 chunks	
+                else:
+                    # which might contain repeated chunks
+                    print('A total of ' +str(num_chunks) +' chunks arrived.')
+                    
+                    # check if the 4 chunks are all different [1 through 4]
+                    # create a list for numbers
+                    arrived_ordered = []
+                    for i in range(0,4):
+                        chunk_end = arrived[i].split('_')[-1]
+                        chunk_num = int(chunk_end[-1])
+                        arrived_ordered.append(chunk_num)
+                    
+                    # should be [1,2,3,4]
+                    arrived_ordered.sort()
+                    print(arrived_ordered)
+                    # if it is, as expected
+                    if arrived_ordered == [1,2,3,4]:
+                    
+                        print('All four chunks are present.')
+                        
+                        # send FIN ACK
+                        FIN = 'Transfer successful.'
+                        for i in range(0,4):
+                            try:
+                                conns[i].send(FIN.encode())
+                            except OSError:
+                                pass 
+                                
+                        # concatenate chunks into file
+                        chunk_list.sort()
+                        final_filename = chunk_list[0].split('_')[0] + chunk_list[0].split('_')[1]
+                        
+                        with open(username +'\\' +final_filename, 'wb') as outfile:		
+                            for chunk_name in chunk_list:
+                                with open(username +'\\' +chunk_name, 'rb') as infile:
+                                    outfile.write(infile.read())
+                        
+                        print('File successfully reconstructed.')
+                        
+                        #clearing file
+                        with open(username +'\\' +final_filename, 'r') as r, open(username +'\\' +final_filename+'_temp', 'w') as o:
+                            for line in r:
+                                #strip() function
+                                if line.strip():
+                                    o.write(line)
+                        os.remove(username +'\\' +final_filename) 
+                        os.rename(username +'\\' +final_filename+'_temp', username +'\\' +final_filename)
+
+                        # delete temporary files
+                        for i in range(0,4):
+                            try:
+                                os.remove(str(username +'\\' +chunk_list[i]))
+                            except IndexError:
+                                pass
+                            
+                        print('Exiting now...')
+                        sys.exit()
+                        
+                    else:
+                        # if the ordered list is not [1,2,3,4]
+                        FIN = 'Transfer failed.\Exiting now...'
+                        for i in range(0,4):
+                            try:
+                                conns[i].send(FIN.encode())
+                            except OSError:
+                                pass
+                                
+                        print(FIN)
+                        sys.exit()
+                        
+            # end of GET (within LIST) --------------------------------
+                
+            elif answer.lower() == 'exit':
+                print('Exiting now...')
+                sys.exit()
+                
+            # allow user to try again possibly...
+            else:
+                print('This method does not exist.\nExiting now...')
+                sys.exit()		
+                
+        # GET ----------------------------------------
+        elif command.lower() == 'get':
+            # inform servers 
+            for i in range(0,4):		
+                try:
+                    conns[i].send(command.encode())
+                except OSError:
+                    pass
+            
             
             # create a subdirectory for user in client
             new_dir_path = os.getcwd() +'\\' +username
@@ -808,7 +1066,7 @@ def client():
                 try:
                     conns[i].send(filename.encode())
                 except OSError:
-                    pass
+                    pass	
             
             # receive server answer 
             for i in range(0,4):
@@ -822,8 +1080,10 @@ def client():
                 if answer == 'Server is preparing file transfer...':
                     try:
                         buffersize=int(conns[i].recv(1024).decode())
+                        print(answer)
                     except OSError:
                         pass
+
                 else:
                     try:
                         print(answer)
@@ -840,8 +1100,8 @@ def client():
                 except OSError:
                     pass
             
-            # get first batch of chunks
-            # if not all servers are connected limit range to len(chunk_list)
+            # get first batch of chunks 
+            # if not all servers are connected limit range to len(chunk_list)		
             for i in range(0,len(chunk_list)):
                 try:
                     chunk1=conns[i].recv(buffersize).decode()
@@ -849,11 +1109,10 @@ def client():
                         fh.write(chunk1)
                     print('File chunks successfully transferred.')
                 except OSError:
-                    pass			
-                    
+                    pass
+
             # check that all chunks arrived
             arrived = chunk_list
-            print(chunk_list)
             num_chunks = len(arrived)
             
             # if not all 4 arrived 
@@ -899,7 +1158,7 @@ def client():
                         arrived2_clean.append(arrived2[i])
                     else:
                         pass 
-                    
+                        
                 # create integer list
                 arrived2_intlist = []
                 for i in range(0,len(arrived2_clean)):
@@ -908,7 +1167,7 @@ def client():
                 # compare with [1,2,3,4], if a match
                 if arrived2_intlist == [1,2,3,4]:
                     print('Chunks 1 through 4 are present.')
-                    
+                        
                     # send FIN
                     FIN = 'Transfer successful.'
                     for i in range(0,4):
@@ -935,7 +1194,7 @@ def client():
                             pass
                         
                     print('Exiting now...')
-                    sys.exit()
+                    break
                     
                 else:
 
@@ -945,9 +1204,9 @@ def client():
                             conns[i].send(FIN.encode())
                         except OSError:
                             pass
-                            
+                                
                     print(FIN)
-                    sys.exit()
+                    break
                 
             # else if there are 4 chunks	
             else:
@@ -958,13 +1217,11 @@ def client():
                 # create a list for numbers
                 arrived_ordered = []
                 for i in range(0,4):
-                    chunk_end = arrived[i].split('_')[-1]
-                    chunk_num = int(chunk_end[-1])
-                    arrived_ordered.append(chunk_num)
+                    arrived_ordered.append(int(arrived[i].split('_')[1].split('.')[0]))
                 
                 # should be [1,2,3,4]
                 arrived_ordered.sort()
-                print(arrived_ordered)
+            
                 # if it is, as expected
                 if arrived_ordered == [1,2,3,4]:
                 
@@ -980,7 +1237,7 @@ def client():
                             
                     # concatenate chunks into file
                     chunk_list.sort()
-                    final_filename = chunk_list[0].split('_')[0] + chunk_list[0].split('_')[1]
+                    final_filename = chunk_list[0].split('_')[0] +'.txt'	
                     
                     with open(username +'\\' +final_filename, 'wb') as outfile:		
                         for chunk_name in chunk_list:
@@ -989,15 +1246,6 @@ def client():
                     
                     print('File successfully reconstructed.')
                     
-                    #clearing file
-                    with open(username +'\\' +final_filename, 'r') as r, open(username +'\\' +final_filename+'_temp', 'w') as o:
-                        for line in r:
-                            #strip() function
-                            if line.strip():
-                                o.write(line)
-                    os.remove(username +'\\' +final_filename) 
-                    os.rename(username +'\\' +final_filename+'_temp', username +'\\' +final_filename)
-
                     # delete temporary files
                     for i in range(0,4):
                         try:
@@ -1006,7 +1254,7 @@ def client():
                             pass
                         
                     print('Exiting now...')
-                    sys.exit()
+                    break
                     
                 else:
                     # if the ordered list is not [1,2,3,4]
@@ -1018,251 +1266,9 @@ def client():
                             pass
                             
                     print(FIN)
-                    sys.exit()
-                    
-        # end of GET (within LIST) --------------------------------
-            
-        elif answer.lower() == 'exit':
-            print('Exiting now...')
-            sys.exit()
-            
-        # allow user to try again possibly...
-        else:
-            print('This method does not exist.\nExiting now...')
-            sys.exit()		
-            
-    # GET ----------------------------------------
-    elif command.lower() == 'get':
-        # inform servers 
-        for i in range(0,4):		
-            try:
-                conns[i].send(command.encode())
-            except OSError:
-                pass
-        
-        
-        # create a subdirectory for user in client
-        new_dir_path = os.getcwd() +'\\' +username
+                    break
 
-        if os.path.isdir(new_dir_path) == False:
-            try:  
-                os.mkdir(new_dir_path)
-                print ("Successfully created the directory %s " % new_dir_path)	
-                pass
-            except OSError:
-                print ("Creation of the directory %s failed" % new_dir_path)
-        else:
-            pass
-        
-        # get filename from user
-        filename = input('Please specify a file: ')
-        
-        # send file name to server
-        for i in range(0,4):
-            try:
-                conns[i].send(filename.encode())
-            except OSError:
-                pass	
-        
-        # receive server answer 
-        for i in range(0,4):
-            try:
-                answer=conns[i].recv(1024).decode()
-            except OSError:
-                pass
-        
-        # get buffersize if answer is positive
-        for i in range(0,4):
-            if answer == 'Server is preparing file transfer...':
-                try:
-                    buffersize=int(conns[i].recv(1024).decode())
-                    print(answer)
-                except OSError:
-                    pass
-
-            else:
-                try:
-                    print(answer)
-                    sys.exit()
-                except OSError:
-                    pass			
-                            
-        # get names of first batch of chunks 
-        chunk_list = []
-        for i in range(0,4):
-            try:
-                name=conns[i].recv(1024).decode()
-                chunk_list.append(name)
-            except OSError:
-                pass
-        
-        # get first batch of chunks 
-        # if not all servers are connected limit range to len(chunk_list)		
-        for i in range(0,len(chunk_list)):
-            try:
-                chunk1=conns[i].recv(buffersize).decode()
-                with open(os.path.join(new_dir_path, chunk_list[i]), 'w') as fh:
-                    fh.write(chunk1)
-                print('File chunks successfully transferred.')
-            except OSError:
-                pass
-
-        # check that all chunks arrived
-        arrived = chunk_list
-        num_chunks = len(arrived)
-        
-        # if not all 4 arrived 
-        if num_chunks < 4:
-
-            # send NACK
-            NACK = 'Transfer incomplete'
-            print(NACK +'\nOnly ' +str(num_chunks) +' out of 4 chunks arrived.')
-            for i in range(0,4):
-                try:
-                    conns[i].send(NACK.encode())
-                except OSError:
-                    pass 			
-
-            # get names of second batch
-            chunk2_list = []
-            for i in range(0,4):
-                try:
-                    name2=conns[i].recv(1024).decode()
-                    chunk2_list.append(name2)
-                except OSError:
-                    pass
-                
-            # get second batch
-            print('Receiving second batch...')
-            for i in range(0,len(chunk2_list)):
-                try:
-                    chunk2=conns[i].recv(buffersize).decode()
-                    with open(os.path.join(new_dir_path, chunk2_list[i]), 'w') as fh:
-                        fh.write(chunk2)
-                    print('File chunks successfully transferred.')
-                except OSError:
-                    pass
-            
-            # check if the chunks are the correct ones now
-            # list all files (list already ordered)
-            arrived2 = os.listdir(new_dir_path)
-
-            # subset the 4 chunks of interst (filename)
-            arrived2_clean = []
-            for i in range(0, len(arrived2)):
-                if arrived2[i].split('_')[0] == filename:
-                    arrived2_clean.append(arrived2[i])
-                else:
-                    pass 
-                    
-            # create integer list
-            arrived2_intlist = []
-            for i in range(0,len(arrived2_clean)):
-                arrived2_intlist.append(int(arrived2_clean[i].split('_')[1].split('.')[0]))
-
-            # compare with [1,2,3,4], if a match
-            if arrived2_intlist == [1,2,3,4]:
-                print('Chunks 1 through 4 are present.')
-                    
-                # send FIN
-                FIN = 'Transfer successful.'
-                for i in range(0,4):
-                    try:
-                        conns[i].send(FIN.encode())
-                    except OSError:
-                        pass 
-                        
-                # concatenate chunks into file
-                final_filename = arrived2_clean[0].split('_')[0] +'.txt'	
-                
-                with open(username +'\\' +final_filename, 'wb') as outfile:		
-                    for chunk_name in arrived2_clean:
-                        with open(username +'\\' +chunk_name, 'rb') as infile:
-                            outfile.write(infile.read())
-                
-                print('File successfully reconstructed.')
-                
-                # delete temporary files
-                for i in range(0,len(arrived2_clean)):
-                    try:
-                        os.remove(str(username +'\\' +arrived2_clean[i]))
-                    except IndexError:
-                        pass
-                    
-                print('Exiting now...')
-                sys.exit()
-                
-            else:
-
-                FIN = 'Transfer failed.\nExiting now...'
-                for i in range(0,4):
-                    try:
-                        conns[i].send(FIN.encode())
-                    except OSError:
-                        pass
-                            
-                print(FIN)
-                sys.exit()
-            
-        # else if there are 4 chunks	
-        else:
-            # which might contain repeated chunks
-            print('A total of ' +str(num_chunks) +' chunks arrived.')
-            
-            # check if the 4 chunks are all different [1 through 4]
-            # create a list for numbers
-            arrived_ordered = []
-            for i in range(0,4):
-                arrived_ordered.append(int(arrived[i].split('_')[1].split('.')[0]))
-            
-            # should be [1,2,3,4]
-            arrived_ordered.sort()
-        
-            # if it is, as expected
-            if arrived_ordered == [1,2,3,4]:
-            
-                print('All four chunks are present.')
-                
-                # send FIN ACK
-                FIN = 'Transfer successful.'
-                for i in range(0,4):
-                    try:
-                        conns[i].send(FIN.encode())
-                    except OSError:
-                        pass 
-                        
-                # concatenate chunks into file
-                chunk_list.sort()
-                final_filename = chunk_list[0].split('_')[0] +'.txt'	
-                
-                with open(username +'\\' +final_filename, 'wb') as outfile:		
-                    for chunk_name in chunk_list:
-                        with open(username +'\\' +chunk_name, 'rb') as infile:
-                            outfile.write(infile.read())
-                
-                print('File successfully reconstructed.')
-                
-                # delete temporary files
-                for i in range(0,4):
-                    try:
-                        os.remove(str(username +'\\' +chunk_list[i]))
-                    except IndexError:
-                        pass
-                    
-                print('Exiting now...')
-                sys.exit()
-                
-            else:
-                # if the ordered list is not [1,2,3,4]
-                FIN = 'Transfer failed.\Exiting now...'
-                for i in range(0,4):
-                    try:
-                        conns[i].send(FIN.encode())
-                    except OSError:
-                        pass
-                        
-                print(FIN)
-                sys.exit()
+    sys.exit()   
         
 # run client
 if __name__=='__main__':

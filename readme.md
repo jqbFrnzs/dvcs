@@ -13,7 +13,7 @@ Ten projekt został pomyślany jako niskopoziomowa implementacja rozproszonego s
 
 **Gites** jest tu zdefiniowany po prostu jako klaster serwerów w architekturze serwer-klient, hostujący potencjalnie duże pliki tekstowe, które muszą być przesyłane i przechowywane niezawodnie i bezpiecznie w sposób odporny na błędy.
 
-Poniżej pokazano, jak uruchomić **Gites lokalnie, symulując rozproszony klaster. Dany plik jest dystrybuowany `(PUT <nazwa pliku>`) z klienta DFC (distributed file client) do czterech serwerów DFS (distributed file system) w kawałkach (chunks), które mogą być pobrane (`GET <nazwa pliku>`) i użyte do rekonstrukcji pliku u klienta lokalnego.
+Poniżej pokazano, jak uruchomić **Gites** lokalnie, symulując rozproszony klaster. Dany plik jest dystrybuowany `(PUT <nazwa pliku>`) z klienta DFC (distributed file client) do czterech serwerów DFS (distributed file system) w kawałkach (chunks), które mogą być pobrane (`GET <nazwa pliku>`) i użyte do rekonstrukcji pliku u klienta lokalnego.
 
 Istnieje wbudowana redundancja w sposobie przechowywania kawałków plików w serwerach, co zapewnia, że jeśli dany (pojedynczy) serwer ulegnie awarii, plik nadal może zostać zrekonstruowany. Optymalizacja ruchu jest osiągana poprzez nie wysyłanie żadnych nadmiarowych kawałków (chunks) plików, jeśli nie jest to konieczne. Pewne bezpieczeństwo jest zaimplementowane poprzez uwierzytelnianie i przechowywanie haszy haseł (md5).
 
@@ -41,7 +41,7 @@ RUN (dowolna liczba) serwerów najpierw, potem klient:
 
 Nazwy użytkowników i hasła mogą być zmieniane w plikach konfiguracyjnych. Zmiany muszą być zgodne z odstępami i składnią plików conf i być identyczne we wszystkich plikach .conf (pliki .conf dfs i dfc są identyczne z wyjątkiem nazwy).
 
-Algorytm haszowania hasła to md5. Jeśli chcieć wykorzystać inny, wszystkie odpowiednie hashe muszą być ponownie obliczone w pliku dfc.py (ctrl+f: 'hashlib').
+Algorytm hashowania hasła to md5. Jeśli chcieć wykorzystać inny, wszystkie odpowiednie hashe muszą być ponownie obliczone w pliku dfc.py (ctrl+f: 'hashlib').
 
 ### **Polecenia**
 Program wyswietla liste dostepnych komend:
